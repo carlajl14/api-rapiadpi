@@ -2,8 +2,6 @@ from flask import Flask, request, jsonify
 from PIL import Image, UnidentifiedImageError
 from fpdf import FPDF
 import os
-import base64
-from io import BytesIO
 
 app = Flask(__name__)
 
@@ -11,47 +9,27 @@ app = Flask(__name__)
 def convert_image_to_pdf():
     try:
         # Imprimir el contenido recibido para depuración
-        print("Contenido de request.form:")
-        print(request.form)
         print("Contenido de request.files:")
         print(request.files)
         
         if 'image' in request.files:
             file = request.files['image']
+            # Verifica si se ha seleccionado un archivo
+            if file.filename == '':
+                return jsonify({"error": "No selected file"}), 400
+
             # Guarda el archivo temporalmente
             temp_image_path = f"/tmp/{file.filename}"
             file.save(temp_image_path)
+            print(f"Archivo {file.filename} guardado temporalmente en {temp_image_path}")
 
-        elif 'image' in request.form:
-            image_data = request.form['image']
-            print("Datos de imagen recibidos:", image_data)
-            
-            # Quitar el prefijo 'data:image/jpeg;base64,' si está presente
-            if ',' in image_data:
-                image_data = image_data.split(',')[1]
-
-            # Decodificar la imagen en base64
+            # Abre la imagen desde el archivo temporal
             try:
-                image_bytes = base64.b64decode(image_data)
-            except Exception as e:
-                print("Error de decodificación base64:", e)
-                return jsonify({"error": f"Base64 decoding error: {str(e)}"}), 400
-            
-            # Usar BytesIO para tratar los bytes como un archivo
-            try:
-                image = Image.open(BytesIO(image_bytes))
-                print("Imagen abierta:", image)
-                image.verify()  # Verificar que la imagen sea válida
-                print("Imagen verificada")
+                image = Image.open(temp_image_path)
+                image.verify()  # Verifica que la imagen sea válida
+                image = Image.open(temp_image_path)  # Reabrir la imagen
             except UnidentifiedImageError:
-                print("Error al identificar el archivo de imagen")
                 return jsonify({"error": "Cannot identify image file"}), 400
-            
-            # Guardar temporalmente la imagen
-            temp_image_path = "/tmp/temp_image.jpg"
-            image = Image.open(BytesIO(image_bytes))  # Reabrir la imagen
-            image.save(temp_image_path)
-            print("Imagen guardada temporalmente en:", temp_image_path)
 
         else:
             return jsonify({"error": "No file part"}), 400
@@ -62,7 +40,7 @@ def convert_image_to_pdf():
         pdf.image(temp_image_path, x=10, y=10, w=100)
         
         # Guarda el PDF temporalmente
-        pdf_output = f"/tmp/{os.path.splitext(temp_image_path)[0]}.pdf"
+        pdf_output = f"/tmp/{os.path.splitext(file.filename)[0]}.pdf"
         pdf.output(pdf_output)
         print("PDF guardado temporalmente en:", pdf_output)
         
@@ -78,7 +56,7 @@ def convert_image_to_pdf():
         os.remove(pdf_output)
 
         # Devuelve el archivo PDF codificado en base64
-        return jsonify({"file": pdf_base64, "filename": "converted.pdf"}), 200
+        return jsonify({"file": pdf_base64, "filename": f"{os.path.basename(pdf_output)}"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
