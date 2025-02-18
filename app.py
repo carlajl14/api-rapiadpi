@@ -3,7 +3,6 @@ from PIL import Image, UnidentifiedImageError
 from fpdf import FPDF
 import os
 import base64
-import io
 
 app = Flask(__name__)
 
