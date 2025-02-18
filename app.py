@@ -17,18 +17,6 @@ def convert_image_to_pdf():
         if not data:
             return jsonify({"error": "No binary data received"}), 400
 
-        # Guarda los datos binarios en un archivo temporal para depuración
-        temp_binary_path = "/tmp/temp_binary_image"
-        with open(temp_binary_path, 'wb') as f:
-            f.write(data)
-        
-        # Intenta abrir la imagen desde el archivo temporal
-        with open(temp_binary_path, 'rb') as f:
-            image = Image.open(f)
-            image.verify()  # Verifica que la imagen sea válida
-
-        # Guarda la imagen temporalmente para poder agregarla al PDF
-        temp_image_path = "/tmp/temp_image.jpg"
         image = Image.open(io.BytesIO(data))
         image.save(temp_image_path)
 
