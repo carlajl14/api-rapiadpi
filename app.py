@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from PIL import Image, UnidentifiedImageError
 from fpdf import FPDF
 import os
+import base64  # Asegurarse de importar el módulo base64
 
 app = Flask(__name__)
 
