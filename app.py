@@ -16,15 +16,14 @@ def convert_image_to_pdf():
         print("Contenido de request.files:")
         print(request.files)
         
-        # Verifica si se recibieron archivos en la solicitud
         if 'image' in request.files:
             file = request.files['image']
             # Guarda el archivo temporalmente
             temp_image_path = f"/tmp/{file.filename}"
             file.save(temp_image_path)
 
-        elif 'image' in request.form and 'data' in request.form['image']:
-            image_data = request.form['image']['data']
+        elif 'image' in request.form:
+            image_data = request.form['image']
             # Decodificar la imagen en base64
             image_bytes = base64.b64decode(image_data.split(',')[1])
             # Usar BytesIO para tratar los bytes como un archivo
