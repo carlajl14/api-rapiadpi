@@ -3,23 +3,19 @@ from PIL import Image
 from fpdf import FPDF
 import os
 import base64
+import io
 
 app = Flask(__name__)
 
 @app.route('/convert', methods=['POST'])
 def convert_image_to_pdf():
-    if 'image' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-
-    file = request.files['image']
-
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-
     try:
+        # Lee los datos binarios de la imagen desde la solicitud
+        data = request.get_data()
+
         # Guarda la imagen temporalmente para poder agregarla al PDF
-        temp_image_path = f"/tmp/{file.filename}"
-        image = Image.open(file)
+        temp_image_path = f"/tmp/temp_image.jpg"
+        image = Image.open(io.BytesIO(data))
         image.save(temp_image_path)
         
         # Crea el PDF
@@ -28,7 +24,7 @@ def convert_image_to_pdf():
         pdf.image(temp_image_path, x=10, y=10, w=100)
         
         # Guarda el PDF temporalmente
-        pdf_output = f"/tmp/{file.filename}.pdf"
+        pdf_output = f"/tmp/temp_output.pdf"
         pdf.output(pdf_output)
         
         # Elimina la imagen temporal
@@ -43,7 +39,7 @@ def convert_image_to_pdf():
         os.remove(pdf_output)
         
         # Devuelve el archivo PDF codificado en base64
-        return jsonify({"file": pdf_base64, "filename": f"{file.filename}.pdf"}), 200
+        return jsonify({"file": pdf_base64, "filename": "output.pdf"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
