@@ -33,14 +33,8 @@ def convert_image_to_pdf():
             image_bytes = base64.b64decode(image_data)
             # Usar BytesIO para tratar los bytes como un archivo
             image = Image.open(BytesIO(image_bytes))
-            # Verificar que la imagen sea válida
-            try:
-                image.verify()
-            except UnidentifiedImageError:
-                return jsonify({"error": "Cannot identify image file"}), 400
             # Guardar temporalmente la imagen
             temp_image_path = "/tmp/temp_image.jpg"
-            image = Image.open(BytesIO(image_bytes))  # Reabrir la imagen
             image.save(temp_image_path)
 
         else:
@@ -69,6 +63,8 @@ def convert_image_to_pdf():
         # Devuelve el archivo PDF codificado en base64
         return jsonify({"file": pdf_base64, "filename": "converted.pdf"}), 200
 
+    except UnidentifiedImageError:
+        return jsonify({"error": "Cannot identify image file"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
