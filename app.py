@@ -24,6 +24,7 @@ def convert_image_to_pdf():
 
         elif 'image' in request.form:
             image_data = request.form['image']
+            print("Datos de imagen recibidos:", image_data)
             
             # Quitar el prefijo 'data:image/jpeg;base64,' si está presente
             if ',' in image_data:
@@ -33,19 +34,24 @@ def convert_image_to_pdf():
             try:
                 image_bytes = base64.b64decode(image_data)
             except Exception as e:
+                print("Error de decodificación base64:", e)
                 return jsonify({"error": f"Base64 decoding error: {str(e)}"}), 400
             
             # Usar BytesIO para tratar los bytes como un archivo
             try:
                 image = Image.open(BytesIO(image_bytes))
+                print("Imagen abierta:", image)
                 image.verify()  # Verificar que la imagen sea válida
+                print("Imagen verificada")
             except UnidentifiedImageError:
+                print("Error al identificar el archivo de imagen")
                 return jsonify({"error": "Cannot identify image file"}), 400
             
             # Guardar temporalmente la imagen
             temp_image_path = "/tmp/temp_image.jpg"
             image = Image.open(BytesIO(image_bytes))  # Reabrir la imagen
             image.save(temp_image_path)
+            print("Imagen guardada temporalmente en:", temp_image_path)
 
         else:
             return jsonify({"error": "No file part"}), 400
@@ -58,6 +64,7 @@ def convert_image_to_pdf():
         # Guarda el PDF temporalmente
         pdf_output = f"/tmp/{os.path.splitext(temp_image_path)[0]}.pdf"
         pdf.output(pdf_output)
+        print("PDF guardado temporalmente en:", pdf_output)
         
         # Elimina la imagen temporal
         os.remove(temp_image_path)
