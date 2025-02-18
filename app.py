@@ -24,8 +24,13 @@ def convert_image_to_pdf():
 
         elif 'image' in request.form:
             image_data = request.form['image']
+            
+            # Quitar el prefijo 'data:image/jpeg;base64,' si está presente
+            if ',' in image_data:
+                image_data = image_data.split(',')[1]
+
             # Decodificar la imagen en base64
-            image_bytes = base64.b64decode(image_data.split(',')[1])
+            image_bytes = base64.b64decode(image_data)
             # Usar BytesIO para tratar los bytes como un archivo
             image = Image.open(BytesIO(image_bytes))
             # Verificar que la imagen sea válida
@@ -35,6 +40,7 @@ def convert_image_to_pdf():
                 return jsonify({"error": "Cannot identify image file"}), 400
             # Guardar temporalmente la imagen
             temp_image_path = "/tmp/temp_image.jpg"
+            image = Image.open(BytesIO(image_bytes))  # Reabrir la imagen
             image.save(temp_image_path)
 
         else:
