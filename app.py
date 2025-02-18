@@ -13,9 +13,15 @@ def convert_image_to_pdf():
         # Lee los datos binarios de la imagen desde la solicitud
         data = request.get_data()
 
+        # Verifica si se recibieron datos binarios
+        if not data:
+            return jsonify({"error": "No binary data received"}), 400
+
+        # Utiliza BytesIO para manejar los datos binarios como un archivo
+        image = Image.open(io.BytesIO(data))
+        
         # Guarda la imagen temporalmente para poder agregarla al PDF
         temp_image_path = f"/tmp/temp_image.jpg"
-        image = Image.open(io.BytesIO(data))
         image.save(temp_image_path)
         
         # Crea el PDF
