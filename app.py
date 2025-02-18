@@ -9,6 +9,11 @@ app = Flask(__name__)
 @app.route('/convert', methods=['POST'])
 def convert_image_to_pdf():
     try:
+        # Imprimir el contenido recibido para depuración
+        print("Contenido de la solicitud:")
+        print(request.form)
+        print(request.files)
+        
         # Verifica si se recibieron archivos en la solicitud
         if 'image' not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -57,4 +62,4 @@ def convert_image_to_pdf():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
