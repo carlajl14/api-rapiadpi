@@ -10,29 +10,33 @@ app = Flask(__name__)
 @app.route('/convert', methods=['POST'])
 def convert_image_to_pdf():
     try:
-        # Lee los datos binarios de la imagen desde la solicitud
-        data = request.get_data()
-
         # Verifica si se recibieron datos binarios
-        if not data:
+        if not request.data:
             return jsonify({"error": "No binary data received"}), 400
 
-        # Utiliza BytesIO para manejar los datos binarios como un archivo
-        image = Image.open(io.BytesIO(data))
+        # Guarda los datos binarios en un archivo temporal
+        temp_binary_path = "/tmp/temp_binary_image"
+        with open(temp_binary_path, 'wb') as f:
+            f.write(request.data)
+        
+        # Abre la imagen desde el archivo temporal
+        image = Image.open(temp_binary_path)
+        image.verify()  # Verifica que la imagen sea válida
         
         # Guarda la imagen temporalmente para poder agregarla al PDF
         temp_image_path = "/tmp/temp_image.jpg"
+        image = Image.open(temp_binary_path)
         image.save(temp_image_path)
-
+        
         # Crea el PDF
         pdf = FPDF()
         pdf.add_page()
         pdf.image(temp_image_path, x=10, y=10, w=100)
-
+        
         # Guarda el PDF temporalmente
         pdf_output = "/tmp/temp_output.pdf"
         pdf.output(pdf_output)
-
+        
         # Elimina la imagen temporal
         os.remove(temp_image_path)
 
