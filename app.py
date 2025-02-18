@@ -10,34 +10,34 @@ app = Flask(__name__)
 @app.route('/convert', methods=['POST'])
 def convert_image_to_pdf():
     try:
-        # Verifica si se recibieron datos binarios
-        if not request.data:
-            return jsonify({"error": "No binary data received"}), 400
+        # Verifica si se recibieron archivos en la solicitud
+        if 'image' not in request.files:
+            return jsonify({"error": "No file part"}), 400
 
-        # Guarda los datos binarios en un archivo temporal
-        temp_binary_path = "/tmp/temp_binary_image"
-        with open(temp_binary_path, 'wb') as f:
-            f.write(request.data)
+        file = request.files['image']
+        
+        # Verifica si se ha seleccionado un archivo
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        # Guarda el archivo temporalmente
+        temp_image_path = f"/tmp/{file.filename}"
+        file.save(temp_image_path)
 
         try:
-            # Intenta abrir la imagen desde el archivo temporal
-            image = Image.open(temp_binary_path)
+            # Abre la imagen desde el archivo temporal
+            image = Image.open(temp_image_path)
             image.verify()  # Verifica que la imagen sea válida
         except UnidentifiedImageError:
             return jsonify({"error": "Cannot identify image file"}), 400
-        
-        # Guarda la imagen temporalmente para poder agregarla al PDF
-        temp_image_path = "/tmp/temp_image.jpg"
-        image = Image.open(temp_binary_path)
-        image.save(temp_image_path)
-        
+
         # Crea el PDF
         pdf = FPDF()
         pdf.add_page()
         pdf.image(temp_image_path, x=10, y=10, w=100)
         
         # Guarda el PDF temporalmente
-        pdf_output = "/tmp/temp_output.pdf"
+        pdf_output = f"/tmp/{file.filename}.pdf"
         pdf.output(pdf_output)
         
         # Elimina la imagen temporal
@@ -52,7 +52,7 @@ def convert_image_to_pdf():
         os.remove(pdf_output)
 
         # Devuelve el archivo PDF codificado en base64
-        return jsonify({"file": pdf_base64, "filename": "output.pdf"}), 200
+        return jsonify({"file": pdf_base64, "filename": f"{file.filename}.pdf"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
