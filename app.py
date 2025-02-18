@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from fpdf import FPDF
 import os
 import base64
@@ -21,10 +21,13 @@ def convert_image_to_pdf():
         temp_binary_path = "/tmp/temp_binary_image"
         with open(temp_binary_path, 'wb') as f:
             f.write(data)
-        
-        # Abre la imagen desde el archivo temporal
-        image = Image.open(temp_binary_path)
-        image.verify()  # Verifica que la imagen sea válida
+
+        try:
+            # Intenta abrir la imagen desde el archivo temporal
+            image = Image.open(temp_binary_path)
+            image.verify()  # Verifica que la imagen sea válida
+        except UnidentifiedImageError:
+            return jsonify({"error": "Cannot identify image file"}), 400
         
         # Guarda la imagen temporalmente para poder agregarla al PDF
         temp_image_path = "/tmp/temp_image.jpg"
